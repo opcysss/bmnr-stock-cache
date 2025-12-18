@@ -2,11 +2,8 @@ name: Update BMNR Stock Data
 
 on:
   schedule:
-    # 평일 미국 장 시간(UTC 14:30-21:00) = 2분마다
     - cron: '*/2 14-21 * * 1-5'
-    # 그 외 평일 시간 = 10분마다
     - cron: '*/10 0-14,21-23 * * 1-5'
-    # 주말 = 30분마다
     - cron: '*/30 * * * 0,6'
   workflow_dispatch:
 
@@ -32,6 +29,13 @@ jobs:
           ETH_PRICE=$(echo $ETH_DATA | jq -r '.ethereum.usd')
           echo "✅ ETH Price: $ETH_PRICE"
           
+          echo "🔄 Fetching Ethereum supply data..."
+          ETH_SUPPLY_DATA=$(curl -s "https://api.coingecko.com/api/v3/coins/ethereum?localization=false&tickers=false&community_data=false&developer_data=false")
+          ETH_CIRCULATING=$(echo $ETH_SUPPLY_DATA | jq -r '.market_data.circulating_supply // 120430000')
+          ETH_TOTAL=$(echo $ETH_SUPPLY_DATA | jq -r '.market_data.total_supply // 120430000')
+          echo "✅ ETH Circulating Supply: $ETH_CIRCULATING"
+          echo "✅ ETH Total Supply: $ETH_TOTAL"
+          
           echo "🔄 Fetching BMNR stock price..."
           STOCK_DATA=$(curl -s "https://api.twelvedata.com/quote?symbol=BMNR&apikey=$TWELVEDATA_API_KEY")
           echo "📊 Stock Response: $STOCK_DATA"
@@ -48,6 +52,8 @@ jobs:
           {
             "timestamp": "$TIMESTAMP",
             "ethereum": $ETH_PRICE,
+            "eth_circulating_supply": $ETH_CIRCULATING,
+            "eth_total_supply": $ETH_TOTAL,
             "stock": {
               "symbol": "$STOCK_SYMBOL",
               "price": "$STOCK_PRICE",
