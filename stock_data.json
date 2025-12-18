@@ -1,11 +1,11 @@
 {
-  "timestamp": "2025-12-18T08:00:00Z",
-  "ethereum": 3847.52,
+  "timestamp": "2025-12-18T09:47:34Z",
+  "ethereum": 2854.64,
   "stock": {
     "symbol": "BMNR",
-    "price": "29.32",
-    "change": "-2.07",
-    "percent_change": "-6.59",
-    "previous_close": "31.39"
+    "price": "29.32000",
+    "change": "-2.070000",
+    "percent_change": "-6.59446",
+    "previous_close": "31.39000"
   }
 }
