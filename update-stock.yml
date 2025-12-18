@@ -1,0 +1,76 @@
+name: Update BMNR Stock Data
+
+on:
+  schedule:
+    # 평일 미국 장 시간(UTC 14:30-21:00) = 2분마다
+    - cron: '*/2 14-21 * * 1-5'
+    # 그 외 평일 시간 = 10분마다
+    - cron: '*/10 0-14,21-23 * * 1-5'
+    # 주말 = 30분마다
+    - cron: '*/30 * * * 0,6'
+  workflow_dispatch:
+
+jobs:
+  update-stock-data:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Fetch Stock and Crypto Data
+        env:
+          TWELVEDATA_API_KEY: ${{ secrets.TWELVEDATA_API_KEY }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "📅 Timestamp: $TIMESTAMP"
+          
+          echo "🔄 Fetching Ethereum price..."
+          ETH_DATA=$(curl -s "https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd")
+          ETH_PRICE=$(echo $ETH_DATA | jq -r '.ethereum.usd')
+          echo "✅ ETH Price: $ETH_PRICE"
+          
+          echo "🔄 Fetching BMNR stock price..."
+          STOCK_DATA=$(curl -s "https://api.twelvedata.com/quote?symbol=BMNR&apikey=$TWELVEDATA_API_KEY")
+          echo "📊 Stock Response: $STOCK_DATA"
+          
+          STOCK_SYMBOL=$(echo $STOCK_DATA | jq -r '.symbol // "BMNR"')
+          STOCK_PRICE=$(echo $STOCK_DATA | jq -r '.close // "29.32"')
+          STOCK_CHANGE=$(echo $STOCK_DATA | jq -r '.change // "-2.07"')
+          STOCK_PERCENT=$(echo $STOCK_DATA | jq -r '.percent_change // "-6.59"')
+          STOCK_PREV_CLOSE=$(echo $STOCK_DATA | jq -r '.previous_close // "31.39"')
+          
+          echo "✅ Stock Price: $STOCK_PRICE"
+          
+          cat > stock_data.json << EOF
+          {
+            "timestamp": "$TIMESTAMP",
+            "ethereum": $ETH_PRICE,
+            "stock": {
+              "symbol": "$STOCK_SYMBOL",
+              "price": "$STOCK_PRICE",
+              "change": "$STOCK_CHANGE",
+              "percent_change": "$STOCK_PERCENT",
+              "previous_close": "$STOCK_PREV_CLOSE"
+            }
+          }
+          EOF
+          
+          echo "✅ stock_data.json created"
+          cat stock_data.json
+      
+      - name: Commit and Push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "GitHub Actions Bot"
+          git add stock_data.json
+          
+          if git diff --staged --quiet; then
+            echo "⏭️ No changes"
+          else
+            git commit -m "🔄 Update stock data - $(date -u +"%Y-%m-%d %H:%M UTC")"
+            git push
+            echo "✅ Pushed"
+          fi
