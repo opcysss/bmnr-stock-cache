@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-02-12T15:41:43Z",
-  "ethereum": 1955.99,
+  "timestamp": "2026-02-12T16:41:28Z",
+  "ethereum": 1917.66,
   "eth_circulating_supply": 120692542.2815806,
   "eth_total_supply": 120692542.2815806,
   "stock": {
     "symbol": "BMNR",
-    "price": "19.47000",
-    "change": "0",
-    "percent_change": "0",
+    "price": "19.020000",
+    "change": "-0.44999886",
+    "percent_change": "-2.31124",
     "previous_close": "19.47000"
   }
 }
